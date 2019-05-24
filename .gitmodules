@@ -1,3 +1,6 @@
 [submodule "openssl-1.0.2g"]
 	path = openssl
 	url = https://github.com/openssl/openssl.git
+[submodule "TLS-Attacker"]
+	path = TLS-Attacker
+	url = https://github.com/awangadang/TLS-Attacker.git
