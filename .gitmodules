@@ -4,3 +4,6 @@
 [submodule "TLS-Attacker"]
 	path = TLS-Attacker
 	url = https://github.com/awangadang/TLS-Attacker.git
+[submodule "RC4-Attack"]
+	path = RC4-Attack
+	url = https://github.com/jackieden26/RC4-Attack.git
