@@ -128,26 +128,38 @@ class VulnerableFernet():
         return unpadded[:-32]
 
 
-def client():
+class Server():
+    def __init__(self, fernet):
+        self.fernet = fernet
+        self.database = list()
+
+    def receive(self, token):
+        message = fernet.decrypt(token)
+        self.database.append(message)  # fake operation
+
+
+def run_demo():
     key = VulnerableFernet.generate_key()
     f = VulnerableFernet(key)
     message = 'hello'.encode(encoding='utf-8')
     token = f.encrypt(message)
-    # print(len(base64.urlsafe_b64decode(token)))
-    message = f.decrypt(token)
-    print(message.decode('utf-8'))
+    server = Server(f)
+    mitm(server, token)
 
 
-def server(fernet, token):
-    message = fernet.decrypt(token)
+'''
+assumes that attacker has no access to key or message
+'''
 
 
-def mitm(fernet, token):
+def mitm(server, token):
     data = base64.urlsafe_b64decode(token)
-    pass
+    ciphertext = data[25:]
+    ciphertext[-1] = (0).to_bytes(length=1)
+    server.receive()
 
 
 # if __name__ == '__main__':
     # time = timeit.timeit(stmt='client()', setup='from __main__ import client', number=1, timer=time.perf_counter)
     # print(time)
-client()
+run_demo()
