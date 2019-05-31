@@ -54,6 +54,7 @@ class VulnerableFernet():
         if not isinstance(data, bytes):
             raise TypeError("data must be bytes.")
 
+
         # PROBLEM: MAC-then-Encrypt
 
         # HMAC(HDR+R)
@@ -65,7 +66,9 @@ class VulnerableFernet():
         # R+T+pad
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
         padded_data = padder.update(data + hmac) + padder.finalize()
-        print(padded_data)
+        
+        print('Message:', data, 'MAC:', hmac, 'Pad:', padded_data[len(data+hmac):], sep=' ')
+        print('Plaintext to be encrypted: ', padded_data)
         encryptor = Cipher(algorithms.AES(self._encryption_key),
                            modes.CBC(iv), self._backend).encryptor()
         ciphertext = encryptor.update(padded_data) + encryptor.finalize()
@@ -109,7 +112,7 @@ class VulnerableFernet():
             plaintext_padded += decryptor.finalize()
         except ValueError:
             raise InvalidToken
-        # print(plaintext_padded)
+
         unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
 
         unpadded = unpadder.update(plaintext_padded)
@@ -143,11 +146,11 @@ def run_demo():
     key = VulnerableFernet.generate_key()
     # key = b'nRx_kgi8Y9FQhT0euQ7Ppk4TTbgzVaLhupmv9pPc9_E='
     f = VulnerableFernet(key)
-    message = 'hello'.encode(encoding='utf-8')
+    message = input("Enter a message: ").encode(encoding='utf-8')
     token = f.encrypt(message)
+    input('Press enter to continue...')
     server = Server(f)
     mitm(server, token)
-    # print(bitwise_xor(token, token))
 
 
 def bitwise_xor(b1, b2):
@@ -166,8 +169,8 @@ def mitm(server, token):
     ciphertext = iv + data[25:]
     block_size = algorithms.AES.block_size // 8
     num_blocks = len(ciphertext) // block_size
-    # def block_divider(x): return (x[:-16], x[-16:])
 
+    # toggles a byte in a block of the ciphertext
     def try_toggle(ciphertext, block_index, byte_index):
         if byte_index < 0:
             byte_index = byte_index % block_size
@@ -190,14 +193,13 @@ def mitm(server, token):
     def decode_block(ciphertext, block_index):
         plaintext = bytes()
         mask_array = bytes()
-        # Figure out the mask corresponding to making the first block's last byte 0x00
+        # Figure out the first 15 bytes
         for byte_index in range(1, 16):
             for i in range(256):
                 mask = bytes(16 - byte_index) + (i).to_bytes(1, 'big')
                 for j in range(-byte_index + 1, 0):
                     mask += (plaintext[j] ^ byte_index).to_bytes(1, 'big')
                 assert len(mask) == block_size
-                # a = bitwise_xor(ciphertext[-2 * block_size:-1 * block_size], mask)
                 # (C_{i-1} ^ mask) ^ D(C_{i}) = P_{i} ^ mask
                 modded_text = ciphertext[:-2 * block_size] + bitwise_xor(
                     ciphertext[-2 * block_size: -1 * block_size], mask) + ciphertext[-1 * block_size:]
@@ -215,9 +217,11 @@ def mitm(server, token):
                         mask_array = mask[-byte_index].to_bytes(
                             1, 'big') + mask_array
                         break
+            print('Block:', num_blocks - block_index, 'Byte:', block_size - byte_index + 1, 'Mask:', mask[-byte_index].to_bytes(1, 'big'), sep=' ')
             plaintext = (
                 byte_index ^ mask_array[-byte_index]).to_bytes(1, 'big') + plaintext
             # print(plaintext)
+        # figure out last byte
         for i in range(256):
             mask = (i).to_bytes(1, 'big')
             for j in range(-15, 0):
@@ -237,62 +241,13 @@ def mitm(server, token):
                 break
         plaintext = (16 ^ mask_array[-16]).to_bytes(1, 'big') + plaintext
         return plaintext
+
     plaintext_array = bytes()
     for block_index in range(1, num_blocks):
         plaintext_array = decode_block(
             ciphertext, block_index) + plaintext_array
         ciphertext = ciphertext[:-block_size]
-    print(plaintext_array)
-    print(len(plaintext_array))
-
-    '''
-    for i in range(256):
-        mask = bytes(15) + (i).to_bytes(1, 'big')
-        c_minus1 = ciphertext[-2 * block_size: -1 * block_size]
-        changed_block = bitwise_xor(c_minus1, mask)
-        # a = bitwise_xor(ciphertext[-2 * block_size:-1 * block_size], mask)
-        # (C_{i-1} ^ mask) ^ D(C_{i}) = P{i} ^ mask
-        modded_text = ciphertext[:-2 * block_size] + \
-            changed_block + ciphertext[-1 * block_size:]
-        modded_data = data[:25] + modded_text
-        try:
-            server.receive(base64.urlsafe_b64encode(modded_data))
-            if try_toggle(-2, ciphertext, changed_block):
-                mask_array = mask[-1].to_bytes(1, 'big') + mask_array
-                break
-        except InvalidPadding:
-            pass
-        except InvalidToken:
-            if try_toggle(-2, ciphertext, changed_block):
-                mask_array = mask[-1].to_bytes(1, 'big') + mask_array
-                break
-    plaintext = (0x01 ^ mask_array[-1]).to_bytes(1, 'big') + plaintext
-    print(plaintext)
-    # set last byte to 0x02 to find out what second to last byte is
-    for i in range(256):
-        mask = bytes(14) + (i).to_bytes(1, 'big') + (plaintext[-1] ^ 0x02).to_bytes(1, 'big')
-        c_minus1 = ciphertext[-2 * block_size: -1 * block_size]
-        changed_block = bitwise_xor(c_minus1, mask)
-        modded_text = ciphertext[:-2 * block_size] + \
-            changed_block + ciphertext[-1 * block_size:]
-        modded_data = data[:25] + modded_text
-        try:
-            server.receive(base64.urlsafe_b64encode(modded_data))
-            if try_toggle(-3, ciphertext, changed_block):
-                mask_array = mask[-2].to_bytes(1, 'big') + mask_array
-                break
-        except InvalidPadding:
-            pass
-        except InvalidToken:
-            if try_toggle(-3, ciphertext, changed_block):
-                mask_array = mask[-2].to_bytes(1, 'big') + mask_array
-                break
-    plaintext = (0x02 ^ mask_array[-2]).to_bytes(1, 'big') + plaintext
-    print(plaintext)
-    '''
+    print('Decoded plaintext:', plaintext_array, sep=' ')
 
 
-# if __name__ == '__main__':
-    # time = timeit.timeit(stmt='client()', setup='from __main__ import client', number=1, timer=time.perf_counter)
-    # print(time)
 run_demo()
