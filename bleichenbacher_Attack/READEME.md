@@ -10,3 +10,5 @@ You can run the attack by doing `python bleichAttack.py` in the terminal.
 It will then out put attempts at decryption. And after it finds a matching padding
 after decryption it should spit out the original message. There will be false positives
 but that is the in line with the nature of the attack. I reduced the size of message length and random padding length to reduce the time of finding a prime number and other math operations. This program still portrays the main idea of the attack.
+
+You can change `line 176` to a different message of length 3

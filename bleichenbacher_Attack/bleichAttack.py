@@ -172,7 +172,8 @@ def main():
     p = createPrime(40)
     q = createPrime(40)
     
-    myEncodedMessage = pkcs1Encode(7, "hik")
+    # YOU CAN CHANGE MESSAGE HERE BUT HAS TO BE LENGTH 3
+    myEncodedMessage = pkcs1Encode(7, "cab") # MESSAGE = cab
     print("OG MESSAGE:")
     print(myEncodedMessage)
 
