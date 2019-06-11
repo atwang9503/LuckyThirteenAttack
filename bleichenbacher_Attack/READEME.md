@@ -1,4 +1,4 @@
-# RC4-Attack
+# BLEICHENBACHER ATTACK
 
 ## Overview
 This repository aims to implement a more simplified bleichenbacher Attack. 
