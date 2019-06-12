@@ -15,7 +15,7 @@ Message: b'MAC-then-Encrypt is not a secure AE scheme!!!' MAC: b'\x95K\xce\x8e\x
 
 Plaintext to be encrypted:  b'MAC-then-Encrypt is not a secure AE scheme!!!\x95K\xce\x8e\x15\xbeQ\x9ba\x01D\x0f\xd9\xd9\xd4/\xfa%\xa47\x89u\xde+\r\x8c\x07 2\x99\x93\xfc\x03\x03\x03'
 ```
-The program encrypts the message, then passes the resulting token to `mitm(server, token)` which uses `server` as a padding oracle to recover the plaintext bytes from `token`. The program recovers the plaintext starting from the last to first block, from last to first byte.
+The program encrypts the message, then passes the resulting token to [`mitm(server, token)`](./demo.py#L165) which uses `server` as a padding oracle to recover the plaintext bytes from `token`. The program recovers the plaintext starting from the last to first block, from last to first byte.
 ```
 Block: 5 Byte: 16 Mask: b'\x02'
 Block: 5 Byte: 15 Mask: b'\x01'
