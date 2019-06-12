@@ -116,7 +116,6 @@ class VulnerableFernet():
         unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
 
         unpadded = unpadder.update(plaintext_padded)
-        # TODO: interpret data as 0 length pad when padding error raised
         try:
             unpadded += unpadder.finalize()
         except ValueError:
@@ -239,6 +238,7 @@ def mitm(server, token):
             except InvalidToken:
                 mask_array = mask[-16].to_bytes(1, 'big') + mask_array
                 break
+        print('Block:', num_blocks - block_index, 'Byte:', 1, 'Mask:', mask[-16].to_bytes(1, 'big'), sep=' ')
         plaintext = (16 ^ mask_array[-16]).to_bytes(1, 'big') + plaintext
         return plaintext
 
