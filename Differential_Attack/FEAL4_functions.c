@@ -1,8 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
-
-int winner = 0;
-int loser = 0;
+#include "FEAL4_functions.h"
 
 unsigned long subkey[6];
 
@@ -69,7 +68,11 @@ void generateSubkeys(int seed)
 {
     srand(seed);
 
+    printf("Subkeys: \n");
+
     int c;
-    for(c = 0; c <  6; c++)
+    for(c = 0; c <  6; c++){
         subkey[c] = (rand() << 16L) | (rand() & 0xFFFFL);
+        printf("%lu\n", subkey[c]);
+    }
 }
