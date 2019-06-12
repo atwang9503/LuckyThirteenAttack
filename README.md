@@ -38,7 +38,7 @@ b'\x02\xc2\xad\x00cab\x00'`
 Here cab was put into line 176
 There will be false positives which is intended.
 
-# RC4-Attack
+# RC4-FMS-Attack
 
 ## Overview
 This repository aims to implement the stream cipher algorithm RC4,
