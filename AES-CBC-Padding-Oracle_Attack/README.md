@@ -1,5 +1,5 @@
 # Padding Oracle Attack on AES-CBC AE schemes
-The core vulnerability demonstrated in `demo.py` is a padding oracle on a MAC-then-Encrypt AE scheme. Because this design, the decryption algorithm needs to work out how much padding bytes there needs to be, otherwise it cannot operate on the data. In doing so, it will leak information about the message.
+The core vulnerability demonstrated in [`demo.py`](./demo.py) is a padding oracle on a MAC-then-Encrypt AE scheme. Because this design, the decryption algorithm needs to work out how much padding bytes there needs to be, otherwise it cannot operate on the data. In doing so, it will leak information about the message.
 
 One method to prevent this attack is to switch to an Encrypt-then-MAC scheme, which allows the decryption algorithm to not care about how the ciphertext was put together.
 
